@@ -5,7 +5,8 @@ This repository now includes an initial implementation of the Sync Gateway plan 
 ## Implemented in this iteration
 
 ### Centralized middleware behavior
-- Clients call a single endpoint: `POST /api/sync/{tenantId}/{clientId}`.
+- Clients call `GET /api/sync-plan/{tenantId}/{clientId}` to fetch plan metadata.
+- Clients call `POST /api/sync/{tenantId}/{clientId}` for sync execution.
 - Gateway enforces API key authentication (`X-Api-Key`).
 - Backend sync orchestration is encapsulated in `ISyncEngine`.
 
@@ -14,6 +15,7 @@ This repository now includes an initial implementation of the Sync Gateway plan 
 - Applies upsert/delete changes into a tenant-scoped in-memory store.
 - Performs basic optimistic-version conflict detection for upserts.
 - Returns a server cursor and conflict details.
+- Exposes an in-memory sync plan contract (resources, direction, interval, conflict policy, batch size, filters, version).
 
 ### Project structure
 - `src/SyncGateway.Api` — ASP.NET Core API + middleware + sync engine.

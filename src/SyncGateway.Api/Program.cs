@@ -6,6 +6,7 @@ using SyncGateway.Api.Security;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<ISyncEngine, InMemorySyncEngine>();
+builder.Services.AddSingleton<ISyncPlanProvider, InMemorySyncPlanProvider>();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
@@ -21,6 +22,32 @@ var app = builder.Build();
 app.UseMiddleware<ApiKeyMiddleware>();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "sync-gateway" }));
+
+app.MapGet("/api/sync-plan/{tenantId}/{clientId}", async (
+    string tenantId,
+    string clientId,
+    string? appVersion,
+    string? platform,
+    string? capabilities,
+    ISyncPlanProvider planProvider,
+    CancellationToken cancellationToken) =>
+{
+    var parsedCapabilities = string.IsNullOrWhiteSpace(capabilities)
+        ? Array.Empty<string>()
+        : capabilities.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    var context = new SyncPlanContext(
+        TenantId: tenantId,
+        ClientId: clientId,
+        AppVersion: appVersion,
+        Platform: platform,
+        Capabilities: parsedCapabilities);
+
+    var plan = await planProvider.GetPlanAsync(context, cancellationToken);
+
+    return plan is null ? Results.NotFound() : Results.Ok(plan);
+});
+
 
 app.MapPost("/api/sync/{tenantId}/{clientId}", async (
     string tenantId,
