@@ -1,8 +1,9 @@
 using System.Collections.Concurrent;
-using SyncGateway.Api.Contracts;
-using SyncGateway.Api.Domain;
+using SyncGateway.Application.Abstractions;
+using SyncGateway.Application.Sync;
+using SyncGateway.Domain.Sync;
 
-namespace SyncGateway.Api.Infrastructure;
+namespace SyncGateway.Infrastructure.Sync;
 
 public sealed class InMemorySyncEngine : ISyncEngine
 {
@@ -55,7 +56,8 @@ public sealed class InMemorySyncEngine : ISyncEngine
             _ => Array.Empty<SyncChange>()
         };
 
-        var nextCursor = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
+        var serverTimestampUtc = DateTimeOffset.UtcNow;
+        var nextCursor = serverTimestampUtc.ToUnixTimeMilliseconds().ToString();
 
         return Task.FromResult(new SyncResult(
             CorrelationId: command.CorrelationId,
@@ -63,7 +65,7 @@ public sealed class InMemorySyncEngine : ISyncEngine
             AppliedChanges: appliedChanges,
             OutboundChanges: outboundChanges,
             Conflicts: conflicts,
-            ServerTimestampUtc: DateTimeOffset.UtcNow));
+            ServerTimestampUtc: serverTimestampUtc));
     }
 
     private static string BuildKey(string entityType, string entityId) => $"{entityType}:{entityId}";
