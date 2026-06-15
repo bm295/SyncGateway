@@ -1,6 +1,6 @@
-using SyncGateway.Api.Contracts;
+using SyncGateway.Domain.Sync;
 
-namespace SyncGateway.Api.Domain;
+namespace SyncGateway.Application.Sync;
 
 public sealed record SyncCommand(
     string TenantId,
@@ -17,8 +17,3 @@ public sealed record SyncResult(
     IReadOnlyCollection<SyncChange> OutboundChanges,
     IReadOnlyCollection<SyncConflict> Conflicts,
     DateTimeOffset ServerTimestampUtc);
-
-public interface ISyncEngine
-{
-    Task<SyncResult> SyncAsync(SyncCommand command, CancellationToken cancellationToken);
-}
