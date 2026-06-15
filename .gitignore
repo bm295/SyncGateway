@@ -1,0 +1,44 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.csproj.user
+*.dbmdl
+
+# Test and coverage artifacts
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+coverage.*
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# Logs and runtime files
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local environment files
+.env
+.env.*
+appsettings.Development.local.json
+
+# Generated publish output
+publish/
+wwwroot/dist/

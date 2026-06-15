@@ -12,10 +12,11 @@ A centralized Sync Gateway middleware service between clients and backend system
 
 ## Project structure
 - `SyncGateway.sln`
-- `src/SyncGateway.Api/` — presentation layer with HTTP contracts, endpoint mapping, and API key middleware.
-- `src/SyncGateway.Application/` — use-case boundary models and application ports.
-- `src/SyncGateway.Domain/` — enterprise sync entities and enums with no infrastructure dependencies.
-- `src/SyncGateway.Infrastructure/` — adapter implementations and dependency injection wiring.
+- `src/SyncGateway.Api/` - presentation layer with HTTP contracts, endpoint mapping, and API key middleware.
+- `src/SyncGateway.Application/` - use-case boundary models and application ports.
+- `src/SyncGateway.Domain/` - enterprise sync entities and enums with no infrastructure dependencies.
+- `src/SyncGateway.Infrastructure/` - adapter implementations and dependency injection wiring.
+- `docs/FIRST_TASK.md`
 - `docs/IMPLEMENTATION.md`
 - `SYNC_GATEWAY_PROJECT_PLAN.md`
 - `Archived/` (legacy sample files)
