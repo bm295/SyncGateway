@@ -25,8 +25,8 @@ This project is positioned as a centralized synchronization middleware service b
 - [x] Create `src/SyncGateway.Application/Abstractions/IOrderRepository.cs` with the source-of-truth repository contract for `Order`.
 - [x] Create `src/SyncGateway.Api/Validation/SyncRequestValidator.cs` to validate the incoming sync request payload.
 - [x] Create `src/SyncGateway.Api/Mapping/SyncResponseMapper.cs` to convert sync results into API responses.
-- [ ] Create `src/SyncGateway.Application/Abstractions/IConflictPolicyResolver.cs` to define conflict resolution behavior.
-- [ ] Create `src/SyncGateway.Infrastructure/Sync/OrderSyncEngine.cs` as the first entity-specific sync engine implementation.
+- [x] Create `src/SyncGateway.Application/Abstractions/IConflictPolicyResolver.cs` to define conflict resolution behavior.
+- [x] Create `src/SyncGateway.Infrastructure/Sync/OrderSyncEngine.cs` as the first entity-specific sync engine implementation.
 - [ ] Update `src/SyncGateway.Infrastructure/Sync/InMemorySyncPlanProvider.cs` to reference the first MVP entity and its rules.
 - [ ] Create `src/SyncGateway.Api/Endpoints/SyncEndpointsTests.cs` to verify the main sync endpoint behavior.
 - [ ] Create `src/SyncGateway.Api/Endpoints/SyncPlanEndpointsTests.cs` to verify the sync plan endpoint behavior.
