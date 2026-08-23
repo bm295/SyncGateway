@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using SyncGateway.Application.Abstractions;
 using SyncGateway.Application.Sync;
 using SyncGateway.Domain.Sync;
@@ -7,13 +6,17 @@ namespace SyncGateway.Infrastructure.Sync;
 
 public sealed class InMemorySyncEngine : ISyncEngine
 {
-    private static readonly ConcurrentDictionary<string, TenantStore> Stores = new();
+    private readonly ISyncChangeStore store;
 
-    public Task<SyncResult> SyncAsync(SyncCommand command, CancellationToken cancellationToken)
+    public InMemorySyncEngine(ISyncChangeStore store)
+    {
+        this.store = store;
+    }
+
+    public async Task<SyncResult> SyncAsync(SyncCommand command, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var store = Stores.GetOrAdd(command.TenantId, _ => new TenantStore());
         var conflicts = new List<SyncConflict>();
         var appliedChanges = 0;
 
@@ -21,9 +24,9 @@ public sealed class InMemorySyncEngine : ISyncEngine
         {
             foreach (var change in command.Changes)
             {
-                var key = BuildKey(change.EntityType, change.EntityId);
-
-                if (store.Entities.TryGetValue(key, out var existing)
+                var existing = await store.GetAsync(
+                    command.TenantId, change.EntityType, change.EntityId, cancellationToken);
+                if (existing is not null
                     && existing.Version != change.Version
                     && change.Operation == ChangeOperation.Upsert)
                 {
@@ -38,40 +41,31 @@ public sealed class InMemorySyncEngine : ISyncEngine
 
                 if (change.Operation == ChangeOperation.Delete)
                 {
-                    store.Entities.TryRemove(key, out _);
+                    await store.DeleteAsync(
+                        command.TenantId, change.EntityType, change.EntityId, cancellationToken);
                 }
                 else
                 {
-                    store.Entities[key] = change;
+                    await store.UpsertAsync(command.TenantId, change, cancellationToken);
                 }
 
                 appliedChanges++;
             }
         }
 
-        var outboundChanges = command.Direction switch
-        {
-            SyncDirection.Pull => store.Entities.Values.ToArray(),
-            SyncDirection.BiDirectional => store.Entities.Values.ToArray(),
-            _ => Array.Empty<SyncChange>()
-        };
+        var outboundChanges = command.Direction is SyncDirection.Pull or SyncDirection.BiDirectional
+            ? await store.GetAllAsync(command.TenantId, cancellationToken)
+            : Array.Empty<SyncChange>();
 
         var serverTimestampUtc = DateTimeOffset.UtcNow;
         var nextCursor = serverTimestampUtc.ToUnixTimeMilliseconds().ToString();
 
-        return Task.FromResult(new SyncResult(
+        return new SyncResult(
             CorrelationId: command.CorrelationId,
             NextCursor: nextCursor,
             AppliedChanges: appliedChanges,
             OutboundChanges: outboundChanges,
             Conflicts: conflicts,
-            ServerTimestampUtc: serverTimestampUtc));
-    }
-
-    private static string BuildKey(string entityType, string entityId) => $"{entityType}:{entityId}";
-
-    private sealed class TenantStore
-    {
-        public ConcurrentDictionary<string, SyncChange> Entities { get; } = new();
+            ServerTimestampUtc: serverTimestampUtc);
     }
 }
