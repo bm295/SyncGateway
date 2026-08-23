@@ -8,6 +8,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddSyncGatewayInfrastructure(this IServiceCollection services)
     {
+        services.AddSingleton<ISyncChangeStore, InMemorySyncChangeStore>();
         services.AddSingleton<ISyncEngine, InMemorySyncEngine>();
         services.AddSingleton<ISyncPlanProvider, InMemorySyncPlanProvider>();
 

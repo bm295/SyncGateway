@@ -16,6 +16,7 @@ A centralized Sync Gateway middleware service between clients and backend system
 - `src/SyncGateway.Application/` - use-case boundary models and application ports.
 - `src/SyncGateway.Domain/` - enterprise sync entities and enums with no infrastructure dependencies.
 - `src/SyncGateway.Infrastructure/` - adapter implementations and dependency injection wiring.
+- `tests/SyncGateway.Tests/` - behavior and architecture regression tests.
 - `docs/FIRST_TASK.md`
 - `docs/IMPLEMENTATION.md`
 - `SYNC_GATEWAY_PROJECT_PLAN.md`
@@ -29,6 +30,12 @@ dotnet run --project src/SyncGateway.Api/SyncGateway.Api.csproj
 Health check:
 ```bash
 curl http://localhost:5000/health
+```
+
+Run the validation suite:
+
+```bash
+dotnet test SyncGateway.sln
 ```
 
 
