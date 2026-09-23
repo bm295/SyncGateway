@@ -27,7 +27,7 @@ This project is positioned as a centralized synchronization middleware service b
 - [x] Create `src/SyncGateway.Api/Mapping/SyncResponseMapper.cs` to convert sync results into API responses.
 - [x] Create `src/SyncGateway.Application/Abstractions/IConflictPolicyResolver.cs` to define conflict resolution behavior.
 - [x] Create `src/SyncGateway.Infrastructure/Sync/OrderSyncEngine.cs` as the first entity-specific sync engine implementation.
-- [ ] Update `src/SyncGateway.Infrastructure/Sync/InMemorySyncPlanProvider.cs` to reference the first MVP entity and its rules.
+- [x] Update `src/SyncGateway.Infrastructure/Sync/InMemorySyncPlanProvider.cs` to reference the first MVP entity and its rules.
 - [ ] Create `src/SyncGateway.Api/Endpoints/SyncEndpointsTests.cs` to verify the main sync endpoint behavior.
 - [ ] Create `src/SyncGateway.Api/Endpoints/SyncPlanEndpointsTests.cs` to verify the sync plan endpoint behavior.
 - [ ] Create `docs/FIRST_MVP_ENTITY.md` to record the chosen MVP entity name and why it was selected.
