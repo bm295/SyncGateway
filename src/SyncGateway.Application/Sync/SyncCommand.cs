@@ -17,3 +17,5 @@ public sealed record SyncResult(
     IReadOnlyCollection<SyncChange> OutboundChanges,
     IReadOnlyCollection<SyncConflict> Conflicts,
     DateTimeOffset ServerTimestampUtc);
+
+public sealed record SyncChangeBatch(long NextSequence, IReadOnlyCollection<SyncChange> Changes);

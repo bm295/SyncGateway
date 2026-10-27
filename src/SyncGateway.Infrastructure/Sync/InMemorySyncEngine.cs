@@ -1,3 +1,4 @@
+using System.Globalization;
 using SyncGateway.Application.Abstractions;
 using SyncGateway.Application.Sync;
 using SyncGateway.Domain.Sync;
@@ -16,6 +17,11 @@ public sealed class InMemorySyncEngine : ISyncEngine
     public async Task<SyncResult> SyncAsync(SyncCommand command, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        var sequence = 0L;
+        if (command.Cursor is not null &&
+            (!long.TryParse(command.Cursor, NumberStyles.None, CultureInfo.InvariantCulture, out sequence) || sequence < 0))
+            throw new ArgumentException("Cursor must be a non-negative sequence.", nameof(command));
 
         var conflicts = new List<SyncConflict>();
         var appliedChanges = 0;
@@ -39,26 +45,18 @@ public sealed class InMemorySyncEngine : ISyncEngine
                     continue;
                 }
 
-                if (change.Operation == ChangeOperation.Delete)
-                {
-                    await store.DeleteAsync(
-                        command.TenantId, change.EntityType, change.EntityId, cancellationToken);
-                }
-                else
-                {
-                    await store.UpsertAsync(command.TenantId, change, cancellationToken);
-                }
+                await store.UpsertAsync(command.TenantId, change, cancellationToken);
 
                 appliedChanges++;
             }
         }
 
-        var outboundChanges = command.Direction is SyncDirection.Pull or SyncDirection.BiDirectional
-            ? await store.GetAllAsync(command.TenantId, cancellationToken)
-            : Array.Empty<SyncChange>();
-
+        var batch = command.Direction is SyncDirection.Pull or SyncDirection.BiDirectional
+            ? await store.ReadChangesAsync(command.TenantId, sequence, 200, cancellationToken)
+            : new SyncChangeBatch(sequence, Array.Empty<SyncChange>());
+        var outboundChanges = batch.Changes;
         var serverTimestampUtc = DateTimeOffset.UtcNow;
-        var nextCursor = serverTimestampUtc.ToUnixTimeMilliseconds().ToString();
+        var nextCursor = batch.NextSequence.ToString(CultureInfo.InvariantCulture);
 
         return new SyncResult(
             CorrelationId: command.CorrelationId,

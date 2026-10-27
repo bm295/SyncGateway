@@ -1,4 +1,5 @@
 using SyncGateway.Domain.Sync;
+using SyncGateway.Application.Sync;
 
 namespace SyncGateway.Application.Abstractions;
 
@@ -8,6 +9,10 @@ namespace SyncGateway.Application.Abstractions;
 /// </summary>
 public interface ISyncChangeStore
 {
+    // Entries must be visible in sequence order; never advance past an unpublished write.
+    Task<SyncChangeBatch> ReadChangesAsync(
+        string tenantId, long afterSequence, int limit, CancellationToken cancellationToken);
+
     Task<SyncChange?> GetAsync(
         string tenantId,
         string entityType,

@@ -18,7 +18,7 @@ public sealed class InMemorySyncEngineTests
 
         Assert.Equal(1, push.AppliedChanges);
         Assert.Empty(push.OutboundChanges);
-        Assert.Equal(new[] { change }, pull.OutboundChanges);
+        Assert.Equal(change, Assert.Single(pull.OutboundChanges) with { Payload = change.Payload });
     }
 
     [Fact]
@@ -88,7 +88,40 @@ public sealed class InMemorySyncEngineTests
 
         Assert.Equal(1, result.AppliedChanges);
         Assert.Empty(result.Conflicts);
-        Assert.Empty(result.OutboundChanges);
+        Assert.Equal(deletion, result.OutboundChanges.Last() with { Payload = deletion.Payload });
+    }
+
+    [Fact]
+    public async Task Pull_pages_500_changes_and_replays_until_checkpoint_is_saved()
+    {
+        var engine = CreateEngine();
+        await engine.SyncAsync(Command("tenant", SyncDirection.Push,
+            Enumerable.Range(1, 500).Select(i => Change("order", i.ToString(), "v1")).ToArray()), default);
+        var request = Command("tenant", SyncDirection.Pull);
+        var first = await engine.SyncAsync(request, default);
+        var replay = await engine.SyncAsync(request, default);
+        var second = await engine.SyncAsync(request with { Cursor = first.NextCursor }, default);
+        var third = await engine.SyncAsync(request with { Cursor = second.NextCursor }, default);
+        var empty = await engine.SyncAsync(request with { Cursor = third.NextCursor }, default);
+        Assert.Equal(200, first.OutboundChanges.Count);
+        Assert.Equal(first.OutboundChanges, replay.OutboundChanges);
+        Assert.Equal("200", first.NextCursor);
+        Assert.Equal(200, second.OutboundChanges.Count);
+        Assert.Equal("400", second.NextCursor);
+        Assert.Equal(100, third.OutboundChanges.Count);
+        Assert.Equal("500", third.NextCursor);
+        Assert.Empty(empty.OutboundChanges);
+        Assert.Equal("500", empty.NextCursor);
+        Assert.Equal(500, first.OutboundChanges.Concat(second.OutboundChanges)
+            .Concat(third.OutboundChanges).Select(x => x.EntityId).Distinct().Count());
+    }
+
+    [Fact]
+    public async Task Push_does_not_advance_the_pull_checkpoint()
+    {
+        var result = await CreateEngine().SyncAsync(Command("tenant", SyncDirection.Push,
+            Change("order", "1", "v1")), default);
+        Assert.Equal("0", result.NextCursor);
     }
 
     private static SyncCommand Command(

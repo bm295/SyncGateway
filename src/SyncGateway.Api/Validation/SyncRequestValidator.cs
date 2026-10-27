@@ -14,6 +14,11 @@ public sealed class SyncRequestValidator
             errors.Add("CorrelationId is required.");
         }
 
+        if (request.Cursor is not null &&
+            !long.TryParse(request.Cursor, System.Globalization.NumberStyles.None,
+                System.Globalization.CultureInfo.InvariantCulture, out _))
+            errors.Add("Cursor must be a non-negative sequence.");
+
         if (request.Changes is null)
         {
             errors.Add("Changes is required.");

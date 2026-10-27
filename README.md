@@ -64,3 +64,24 @@ curl -X POST "http://localhost:5000/api/sync/default/client-a" \
     "changes": []
   }'
 ```
+
+## Pull checkpoints
+
+The generic in-memory engine keeps an ordered change log per tenant, including delete
+tombstones and repeated updates. A null cursor starts at sequence 0. Pull and
+BiDirectional return at most 200 log entries after the supplied sequence.
+`nextCursor` is the last returned sequence; an empty batch keeps the input position.
+Push preserves the pull checkpoint. Continue pulling until an empty batch is returned.
+Save the checkpoint only after successfully applying the entire batch to the local
+database (ideally in the same local transaction). Retrying an unsaved checkpoint
+replays the batch; clients must apply changes idempotently.
+
+Sequence allocation, state mutation and log publication share a per-tenant lock,
+so a reader cannot skip a write that becomes visible late. A persistent adapter must
+provide the same publication ordering and atomic state/log writes; an identity column
+and MAX(sequence) alone do not guarantee this across concurrent transactions.
+The current log is unbounded and in memory: restarting loses both state and history.
+Persisted checkpoints require durable history before production use. Cursors are
+scoped to a tenant and must not be reused after its history is reset.
+
+Reference: [Couchbase changes feed](https://docs.couchbase.com/sync-gateway/current/deploy/changes-feed.html).
